@@ -1,4 +1,4 @@
-# Multi-Tenant Lambda Architecture Comparison Guide
+# Lambda Comparison Guide Multi-Tenant vs Multi-Model
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -351,80 +351,6 @@ multi-tenant-lambda-repo/
 - **Tenant Management System**: Centralized tenant configuration
 - **Unified Monitoring**: Shared dashboards with tenant filtering
 
----
-
-## Cost Analysis
-
-### Monthly Cost Breakdown (100 Tenants, 10,000 requests/month each)
-
-#### Approach 1: Tenant-Specific Costs
-
-**Lambda Functions:**
-- **Finance Lambdas**: 100 functions × $0.20/month = $20.00
-- **Funds Lambdas**: 100 functions × $0.20/month = $20.00
-- **Execution Costs**: 1M requests × $0.0000002 = $0.20
-- **Compute Time**: 1M × 5 seconds × $0.0000166667 = $83.33
-- **Total Lambda**: $123.53
-
-**SQS Queues:**
-- **Queue Maintenance**: 200 queues × $0.40/month = $80.00
-- **Message Requests**: 1M requests × $0.0000004 = $0.40
-- **Total SQS**: $80.40
-
-**Storage (DynamoDB + S3):**
-- **DynamoDB**: 100 tables × $25/month = $2,500.00
-- **S3 Storage**: 100 buckets × $23/month = $2,300.00
-- **S3 Requests**: 1M requests × $0.0004 = $400.00
-- **Total Storage**: $5,200.00
-
-**Monitoring & Management:**
-- **CloudWatch Logs**: 100 tenants × $5/month = $500.00
-- **CloudWatch Metrics**: 100 tenants × $3/month = $300.00
-- **Total Monitoring**: $800.00
-
-**Daily Cost**: $206.13
-**Weekly Cost**: $1,442.91
-**Monthly Cost**: $6,203.93
-
-#### Approach 2: Model-Specific Costs
-
-**Lambda Functions:**
-- **Finance Lambda**: 1 function × $0.20/month = $0.20
-- **Funds Lambda**: 1 function × $0.20/month = $0.20
-- **Execution Costs**: 1M requests × $0.0000002 = $0.20
-- **Compute Time**: 1M × 5 seconds × $0.0000166667 = $83.33
-- **Total Lambda**: $83.93
-
-**SQS Queues:**
-- **Queue Maintenance**: 2 queues × $0.40/month = $0.80
-- **Message Requests**: 1M requests × $0.0000004 = $0.40
-- **Total SQS**: $1.20
-
-**Storage (DynamoDB + S3):**
-- **DynamoDB**: 2 tables × $250/month = $500.00
-- **S3 Storage**: 1 bucket × $2,300/month = $2,300.00
-- **S3 Requests**: 1M requests × $0.0004 = $400.00
-- **Total Storage**: $3,200.00
-
-**Monitoring & Management:**
-- **CloudWatch Logs**: $50.00
-- **CloudWatch Metrics**: $30.00
-- **Total Monitoring**: $80.00
-
-**Daily Cost**: $109.51
-**Weekly Cost**: $766.57
-**Monthly Cost**: $3,365.13
-
-### Cost Comparison Summary
-
-| Cost Category | Tenant-Specific | Model-Specific | Savings |
-|---------------|-----------------|----------------|---------|
-| Daily | $206.13 | $109.51 | $96.62 (47%) |
-| Weekly | $1,442.91 | $766.57 | $676.34 (47%) |
-| Monthly | $6,203.93 | $3,365.13 | $2,838.80 (46%) |
-
----
-
 ## Pros and Cons
 
 ### Approach 1: Tenant-Specific
@@ -466,80 +392,6 @@ multi-tenant-lambda-repo/
 - **Customization Limitations**: Harder to implement tenant-specific logic
 - **Debugging Complexity**: Multi-tenant issues harder to trace
 - **Compliance Challenges**: May not meet strict isolation requirements
-
----
-
-## Orchestration & Scalability
-
-### Approach 1: Tenant-Specific Orchestration
-
-**Orchestration Strategy:**
-```yaml
-Infrastructure-as-Code:
-  - Terraform modules for tenant provisioning
-  - Automated resource creation per tenant
-  - GitOps workflow for infrastructure changes
-
-Scaling Approach:
-  - Horizontal: Add more tenant-specific functions
-  - Vertical: Increase memory/timeout per tenant
-  - Auto-scaling: Reserved concurrency per tenant
-
-Management Tools:
-  - Tenant onboarding automation
-  - Per-tenant monitoring dashboards
-  - Individual tenant backup strategies
-```
-
-**Scalability Pattern:**
-```
-New Tenant Request → Automated Provisioning → Dedicated Resources
-                                              ↓
-Infrastructure Creation → Function Deployment → Configuration Setup
-                                              ↓
-Database Setup → Storage Creation → Monitoring Setup → Tenant Active
-```
-
-**Optimal Services for Scale:**
-- **Infrastructure**: AWS CloudFormation + Terraform
-- **CI/CD**: AWS CodePipeline with tenant-specific stages
-- **Monitoring**: CloudWatch with tenant-specific dashboards
-- **Management**: Custom tenant management console
-
-### Approach 2: Model-Specific Orchestration
-
-**Orchestration Strategy:**
-```yaml
-Shared Infrastructure:
-  - Single Terraform deployment
-  - Centralized configuration management
-  - Unified CI/CD pipeline
-
-Scaling Approach:
-  - Horizontal: Increase Lambda concurrency
-  - Resource optimization: Dynamic resource allocation
-  - Auto-scaling: Based on queue depth and execution metrics
-
-Management Tools:
-  - Centralized tenant configuration
-  - Unified monitoring with tenant filters
-  - Shared backup and disaster recovery
-```
-
-**Scalability Pattern:**
-```
-New Tenant Request → Configuration Update → Tenant Active
-                           ↓
-DynamoDB Config → Permission Setup → Immediate Availability
-```
-
-**Optimal Services for Scale:**
-- **Configuration**: AWS Systems Manager Parameter Store
-- **CI/CD**: Single AWS CodePipeline for all tenants
-- **Monitoring**: CloudWatch with tenant-based filtering
-- **Management**: Multi-tenant admin console
-
----
 
 ## Decision Matrix
 
@@ -623,33 +475,6 @@ DynamoDB Config → Permission Setup → Immediate Availability
 3. Advanced monitoring and cost optimization
 4. Custom pricing tiers based on infrastructure usage
 
-### Migration Strategy
-
-**Model-Specific to Tenant-Specific:**
-```python
-def determine_tenant_architecture(tenant_id):
-    tenant_config = get_tenant_config(tenant_id)
-
-    # Decision criteria
-    if (tenant_config.revenue > 10000 or
-        tenant_config.tier == "enterprise" or
-        tenant_config.requests_per_month > 100000):
-        return "tenant_specific"
-
-    return "model_specific"
-
-def route_request(tenant_id, model_type, payload):
-    architecture = determine_tenant_architecture(tenant_id)
-
-    if architecture == "tenant_specific":
-        lambda_name = f"{model_type}-{tenant_id}"
-    else:
-        lambda_name = f"{model_type}-shared"
-        payload['tenant_context'] = get_tenant_context(tenant_id)
-
-    return invoke_lambda(lambda_name, payload)
-```
-
 ---
 
 ## Conclusion
@@ -664,4 +489,5 @@ The key is to build a flexible architecture that can evolve with your business n
 
 ---
 
-*This document provides a comprehensive comparison to help DevOps teams make informed decisions about multi-tenant Lambda architectures.*
+
+*This document provides a comprehensive comparison to help DevOps teams make informed decisions about multi-tenant vs multi-model Lambda architectures.*
