@@ -5,17 +5,15 @@
 2. [Architecture Diagrams](#architecture-diagrams)
 3. [Solution Workflows](#solution-workflows)
 4. [Codebase Structure](#codebase-structure)
-5. [Cost Analysis](#cost-analysis)
-6. [Pros and Cons](#pros-and-cons)
-7. [Orchestration & Scalability](#orchestration--scalability)
-8. [Decision Matrix](#decision-matrix)
-9. [Implementation Recommendations](#implementation-recommendations)
+5. [Pros and Cons](#pros-and-cons)
+6. [Decision Matrix](#decision-matrix)
+7. [Implementation Recommendations](#implementation-recommendations)
 
 ---
 
 ## Introduction
 
-This document compares two approaches for implementing multi-tenant DFC obligation models using AWS Lambda:
+This document compares two approaches for using AWS Lambda:
 
 **Approach 1: Tenant-Specific Lambda Functions**
 - Each tenant gets dedicated Lambda functions
@@ -251,46 +249,7 @@ This document compares two approaches for implementing multi-tenant DFC obligati
 ---
 
 ## Codebase Structure
-
 ### Approach 1: Tenant-Specific Codebase
-
-**Repository Structure:**
-```
-multi-tenant-lambda-repo/
-├── infrastructure/
-│   ├── terraform/
-│   │   ├── tenant-specific-modules/
-│   │   │   ├── lambda-finance/
-│   │   │   ├── lambda-funds/
-│   │   │   ├── sqs-queues/
-│   │   │   └── storage/
-│   │   └── tenant-provisioning/
-│   └── scripts/
-│       ├── deploy-tenant.sh
-│       └── provision-resources.sh
-├── lambda-functions/
-│   ├── finance-model/
-│   │   ├── src/
-│   │   │   ├── tenant-specific/
-│   │   │   │   ├── tenant-abc-config.py
-│   │   │   │   ├── tenant-xyz-config.py
-│   │   │   │   └── tenant-def-config.py
-│   │   │   ├── models/
-│   │   │   └── utils/
-│   │   ├── requirements.txt
-│   │   └── handler.py
-│   └── funds-model/
-│       ├── src/
-│       ├── requirements.txt
-│       └── handler.py
-├── shared-libraries/
-│   ├── tenant-management/
-│   ├── database-connectors/
-│   └── file-processors/
-└── deployment/
-    ├── tenant-onboarding/
-    └── ci-cd-pipelines/
-```
 
 **Key Components:**
 - **Tenant-Specific Lambda Functions**: Each tenant gets dedicated function instances
@@ -301,49 +260,6 @@ multi-tenant-lambda-repo/
 
 ### Approach 2: Model-Specific Codebase
 
-**Repository Structure:**
-```
-multi-tenant-lambda-repo/
-├── infrastructure/
-│   ├── terraform/
-│   │   ├── shared-modules/
-│   │   │   ├── lambda-functions/
-│   │   │   ├── sqs-queues/
-│   │   │   ├── shared-storage/
-│   │   │   └── dynamodb-config/
-│   │   └── monitoring/
-│   └── scripts/
-│       └── deploy-shared.sh
-├── lambda-functions/
-│   ├── finance-model/
-│   │   ├── src/
-│   │   │   ├── multi-tenant/
-│   │   │   │   ├── tenant-resolver.py
-│   │   │   │   ├── config-loader.py
-│   │   │   │   └── isolation-manager.py
-│   │   │   ├── models/
-│   │   │   └── utils/
-│   │   ├── requirements.txt
-│   │   └── handler.py
-│   └── funds-model/
-│       ├── src/
-│       ├── requirements.txt
-│       └── handler.py
-├── shared-libraries/
-│   ├── tenant-management/
-│   │   ├── tenant-resolver.py
-│   │   ├── config-manager.py
-│   │   └── isolation-utils.py
-│   ├── database-connectors/
-│   └── file-processors/
-├── tenant-configurations/
-│   ├── tenant-registry.json
-│   └── tenant-specific-configs/
-└── deployment/
-    ├── shared-infrastructure/
-    └── ci-cd-pipelines/
-```
-
 **Key Components:**
 - **Multi-Tenant Lambda Functions**: Single functions handling all tenants
 - **Dynamic Configuration Loading**: Runtime tenant configuration resolution
@@ -352,7 +268,6 @@ multi-tenant-lambda-repo/
 - **Unified Monitoring**: Shared dashboards with tenant filtering
 
 ## Pros and Cons
-
 ### Approach 1: Tenant-Specific
 
 #### Pros ✅
@@ -491,3 +406,4 @@ The key is to build a flexible architecture that can evolve with your business n
 
 
 *This document provides a comprehensive comparison to help DevOps teams make informed decisions about multi-tenant vs multi-model Lambda architectures.*
+
